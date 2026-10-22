@@ -596,4 +596,50 @@ function App() {
                       <td className="p-3">{t.session}</td>
                       <td className="p-3 text-cyan-400 font-bold">{t.score}%</td>
                       <td className="p-3">${t.riskAmount}</td>
-                      <td
+                      <td className={`p-3 font-bold ${parseFloat(t.pnl) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>${t.pnl}</td>
+                      <td className="p-3 text-cyan-400 font-bold">{t.rMultiple}R</td>
+                      <td className="p-3 text-center">
+                        <button onClick={() => handleDeleteTrade(t.id)} className="p-1 text-slate-500 hover:text-rose-400">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB 3: ANALYTICS */}
+      {activeTab === 'analytics' && (
+        <div className="max-w-7xl mx-auto space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-[#121724] p-5 rounded-2xl border border-slate-800">
+              <span className="text-xs text-slate-400 block mb-1">אחוז ניצחונות (Win Rate)</span>
+              <span className={`text-3xl font-black font-mono ${analytics.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400'}`}>{analytics.winRate}%</span>
+              <span className="text-[10px] text-slate-500 block mt-1">עסקאות סגורות: {analytics.total}</span>
+            </div>
+
+            <div className="bg-[#121724] p-5 rounded-2xl border border-slate-800">
+              <span className="text-xs text-slate-400 block mb-1">רווח מצטבר ($)</span>
+              <span className={`text-3xl font-black font-mono ${analytics.totalPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>${analytics.totalPnl}</span>
+            </div>
+
+            <div className="bg-[#121724] p-5 rounded-2xl border border-slate-800">
+              <span className="text-xs text-slate-400 block mb-1">ממוצע R:R</span>
+              <span className="text-3xl font-black font-mono text-cyan-400">{analytics.avgR}R</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
