@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom/client';
 import { 
   Target, FileText, Activity, Trash2, Award, Plus, Sparkles, RefreshCw, 
-  Upload, Cpu, BarChart2, DollarSign, Layers, ShieldAlert, Zap, Clock
+  Upload, Cpu, BarChart2, DollarSign, ShieldAlert, Zap, Clock, CheckCircle2
 } from 'lucide-react';
 
 const PAIR_OPTIONS = [
@@ -22,26 +22,32 @@ function App() {
   const [customPair, setCustomPair] = useState('');
   const [tradeType, setTradeType] = useState('LONG');
   const [tradeStatus, setTradeStatus] = useState('ACTIVE'); // 'PENDING', 'ACTIVE', 'CLOSED'
-  const [session, setSession] = useState('London');
+  const [session, setSession] = useState('London Session');
   const [accountSize] = useState('10900');
   const [riskAmount, setRiskAmount] = useState('109');
   const [tradeResult, setTradeResult] = useState('WIN');
   const [pnlAmount, setPnlAmount] = useState('');
   const [notes, setNotes] = useState('');
 
-  // CONFLUENCE STATE
+  // 01: BIAS & TRENDS
   const [htfTrend, setHtfTrend] = useState(false);
   const [mtfTrend, setMtfTrend] = useState(false);
   const [ltfTrend, setLtfTrend] = useState(false);
+
+  // 02: KEY ZONES & IMBALANCE
   const [zoneType, setZoneType] = useState('none'); 
   const [hasImbalance, setHasImbalance] = useState(false);
-  const [liquidityType, setLiquidityType] = useState('none');
+
+  // 03: LIQUIDITY SWEEPS
+  const [liquidityType, setLiquidityType] = useState('none'); // 'none', 'push', 'pull', 'both'
   const [vShapeLiq, setVShapeLiq] = useState(false);
-  const [shiftType, setShiftType] = useState('none');
+
+  // 04: MARKET SHIFT, TRAPS & MODELS
+  const [shiftType, setShiftType] = useState('none'); // 'none', 'ms', 'fractal'
   const [trapsCount, setTrapsCount] = useState(0);
   const [selectedModel, setSelectedModel] = useState('none');
 
-  // SCREENSHOTS STATE (INCLUDES MODEL SCREENSHOT)
+  // SCREENSHOTS STATE
   const [images, setImages] = useState({
     htf: null,
     mtf: null,
@@ -66,7 +72,7 @@ function App() {
     return (parseFloat(accountSize) || 10900) + closedPnL;
   }, [trades, accountSize]);
 
-  // CONFLUENCE SCORE CALCULATION
+  // CONFLUENCE SCORE CALCULATION (FULL SMC/ICT WEIGHTS)
   const calculatedScore = useMemo(() => {
     let score = 0;
     if (htfTrend) score += 10;
@@ -118,15 +124,15 @@ function App() {
 - צמד: ${pair === 'CUSTOM' ? customPair : pair} | כיוון: ${tradeType} | סשן: ${session}
 - ציון Confluence: ${calculatedScore}%
 - מגמות: HTF שעתי=${htfTrend}, MTF 15m=${mtfTrend}, LTF 1m=${ltfTrend}
-- סוג אזור: ${zoneType}, Imbalance (FVG): ${hasImbalance}
+- אזור: ${zoneType}, Imbalance (FVG): ${hasImbalance}
 - נזילות: ${liquidityType}, V-Shape: ${vShapeLiq}
 - שיפט: ${shiftType}, מלכודות: ${trapsCount}, מודל כניסה: ${selectedModel}
-- גודל חשבון נוכחי: $${currentAccountBalance}, סיכון 1%: $${riskAmount}
+- יתרת חשבון: $${currentAccountBalance}, סיכון 1%: $${riskAmount}
 
-אנא עיין בתמונות (כולל תמונת המודל והכניסה אם צורפו) וספק ייעוץ ממוקד לפני ביצוע העסקה:
-1. האם מודל הכניסה המצולם תואם את המבנה והסשן (${session})?
+ספק ייעוץ קצר וממוקד בעברית:
+1. האם מודל הכניסה והגרפים עקביים?
 2. האם העסקה עומדת בחוק של 1% סיכון ויעד מינימום 3R?
-3. המלצה סופית האם להיכנס או להמתין לאישור נוסף.`;
+3. המלצה סופית אם להיכנס או להמתין.`;
 
       const parts = [{ text: promptText }, ...activeImageParts];
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
@@ -147,9 +153,9 @@ function App() {
       }
     } catch (err) {
       setAiFeedback({
-        summary: `ניתוח תכנון (הערכה ללא API Key): Setup בציון ${calculatedScore}%.
+        summary: `ניתוח תכנון (מקומי): Setup בציון ${calculatedScore}%.
 • סנכרון מגמות: ${htfTrend && mtfTrend ? 'תקין' : 'חלקי'}.
-• וודא שתמונת מודל הכניסה הדגימה שבירת מבנה ברורה ושתיית נזילות.
+• שתיית נזילות: ${liquidityType !== 'none' ? 'מזוהה' : 'טרם סומנה'}.
 • לפי כללי 1% Percent Club, וודא יעד של לפחות 3R ($${(parseFloat(riskAmount) * 3).toFixed(0)} רווח).`,
         confidence: 'סטנדרטי'
       });
@@ -274,6 +280,7 @@ function App() {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* CONFLUENCE FORM (8 COLS) */}
           <div className="lg:col-span-8 space-y-6">
+            
             {/* 01: TRENDS & SCREENSHOTS */}
             <div className="bg-[#121724] p-5 rounded-2xl border border-slate-800 space-y-4">
               <h2 className="font-bold text-sm text-slate-200 border-b border-slate-800 pb-3 flex justify-between">
@@ -286,7 +293,7 @@ function App() {
                 <div className={`p-3 rounded-xl border space-y-2 ${htfTrend ? 'bg-cyan-500/10 border-cyan-500/50' : 'bg-[#182032] border-slate-800'}`}>
                   <label className="flex items-center gap-2 cursor-pointer font-semibold">
                     <input type="checkbox" checked={htfTrend} onChange={(e) => setHtfTrend(e.target.checked)} className="accent-cyan-500" />
-                    <span>HTF שעתי (1H) +10%</span>
+                    <span>1. HTF שעתי (1H) +10%</span>
                   </label>
                   <div className="relative aspect-video bg-[#0d1117] rounded-lg border border-dashed border-slate-700 flex items-center justify-center">
                     {images.htf ? <img src={images.htf} className="w-full h-full object-cover rounded-lg" /> : <Upload className="w-4 h-4 text-slate-500" />}
@@ -298,7 +305,7 @@ function App() {
                 <div className={`p-3 rounded-xl border space-y-2 ${mtfTrend ? 'bg-cyan-500/10 border-cyan-500/50' : 'bg-[#182032] border-slate-800'}`}>
                   <label className="flex items-center gap-2 cursor-pointer font-semibold">
                     <input type="checkbox" checked={mtfTrend} onChange={(e) => setMtfTrend(e.target.checked)} className="accent-cyan-500" />
-                    <span>MTF 15 דקות +10%</span>
+                    <span>2. MTF 15 דקות +10%</span>
                   </label>
                   <div className="relative aspect-video bg-[#0d1117] rounded-lg border border-dashed border-slate-700 flex items-center justify-center">
                     {images.mtf ? <img src={images.mtf} className="w-full h-full object-cover rounded-lg" /> : <Upload className="w-4 h-4 text-slate-500" />}
@@ -310,7 +317,7 @@ function App() {
                 <div className={`p-3 rounded-xl border space-y-2 ${ltfTrend ? 'bg-cyan-500/10 border-cyan-500/50' : 'bg-[#182032] border-slate-800'}`}>
                   <label className="flex items-center gap-2 cursor-pointer font-semibold">
                     <input type="checkbox" checked={ltfTrend} onChange={(e) => setLtfTrend(e.target.checked)} className="accent-cyan-500" />
-                    <span>LTF 1 דקה +5%</span>
+                    <span>3. LTF 1 דקה +5%</span>
                   </label>
                   <div className="relative aspect-video bg-[#0d1117] rounded-lg border border-dashed border-slate-700 flex items-center justify-center">
                     {images.ltf ? <img src={images.ltf} className="w-full h-full object-cover rounded-lg" /> : <Upload className="w-4 h-4 text-slate-500" />}
@@ -331,9 +338,9 @@ function App() {
                 <div>
                   <label className="text-slate-400 block mb-2">סוג האזור:</label>
                   <div className="space-y-1.5">
-                    <button onClick={() => setZoneType('none')} className={`w-full p-2.5 rounded-xl border text-right ${zoneType === 'none' ? 'bg-slate-800 border-slate-600' : 'bg-[#182032] border-slate-800'}`}>ללא אזור מיועד (0%)</button>
-                    <button onClick={() => setZoneType('standard')} className={`w-full p-2.5 rounded-xl border text-right ${zoneType === 'standard' ? 'bg-emerald-500/20 border-emerald-500' : 'bg-[#182032] border-slate-800'}`}>Demand / Supply Zone (+10%)</button>
-                    <button onClick={() => setZoneType('extreme')} className={`w-full p-2.5 rounded-xl border text-right ${zoneType === 'extreme' ? 'bg-emerald-500/30 border-emerald-400 font-bold' : 'bg-[#182032] border-slate-800'}`}>Extreme Zone בקצה המבנה (+20%)</button>
+                    <button onClick={() => setZoneType('none')} className={`w-full p-2.5 rounded-xl border text-right transition-all ${zoneType === 'none' ? 'bg-slate-800 border-slate-600' : 'bg-[#182032] border-slate-800'}`}>ללא אזור מיועד (0%)</button>
+                    <button onClick={() => setZoneType('standard')} className={`w-full p-2.5 rounded-xl border text-right transition-all ${zoneType === 'standard' ? 'bg-emerald-500/20 border-emerald-500' : 'bg-[#182032] border-slate-800'}`}>Demand / Supply Zone (+10%)</button>
+                    <button onClick={() => setZoneType('extreme')} className={`w-full p-2.5 rounded-xl border text-right transition-all ${zoneType === 'extreme' ? 'bg-emerald-500/30 border-emerald-400 font-bold' : 'bg-[#182032] border-slate-800'}`}>Extreme Zone בקצה המבנה (+20%)</button>
                   </div>
                 </div>
 
@@ -350,38 +357,76 @@ function App() {
               </div>
             </div>
 
-            {/* 03: MODEL SCREENSHOT & SELECTION */}
+            {/* 03: LIQUIDITY SWEEPS (ADDED BACK) */}
             <div className="bg-[#121724] p-5 rounded-2xl border border-slate-800 space-y-4">
               <h2 className="font-bold text-sm text-slate-200 border-b border-slate-800 pb-3 flex justify-between">
-                <span>03. מודל כניסה ייעודי + צילום הגרף של המודל</span>
-                <span className="text-xs text-purple-400 font-mono">משקל: 15%</span>
+                <span>03. שתיית נזילות (Liquidity Sweeps)</span>
+                <span className="text-xs text-amber-400 font-mono">משקל: עד 25%</span>
               </h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                 <div>
-                  <label className="text-slate-400 block mb-2">מודלי כניסה (Brad / SMC):</label>
-                  <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className="w-full bg-[#182032] border border-slate-700 rounded-xl p-2.5 text-xs text-purple-200 font-semibold">
+                  <label className="text-slate-400 block mb-2">סוג אינדוסמנט (Inducement):</label>
+                  <div className="space-y-1.5">
+                    <button onClick={() => setLiquidityType('none')} className={`w-full p-2 rounded-lg border text-right ${liquidityType === 'none' ? 'bg-slate-800 border-slate-600' : 'bg-[#182032] border-slate-800'}`}>ללא אינדוסמנט (0%)</button>
+                    <button onClick={() => setLiquidityType('push')} className={`w-full p-2 rounded-lg border text-right ${liquidityType === 'push' ? 'bg-amber-500/20 border-amber-500 text-amber-200' : 'bg-[#182032] border-slate-800'}`}>Push Inducement (+10%)</button>
+                    <button onClick={() => setLiquidityType('pull')} className={`w-full p-2 rounded-lg border text-right ${liquidityType === 'pull' ? 'bg-amber-500/20 border-amber-500 text-amber-200' : 'bg-[#182032] border-slate-800'}`}>Pull Inducement (+5%)</button>
+                    <button onClick={() => setLiquidityType('both')} className={`w-full p-2 rounded-lg border text-right font-bold ${liquidityType === 'both' ? 'bg-amber-500/30 border-amber-400 text-amber-100' : 'bg-[#182032] border-slate-800'}`}>שילוב Push & Pull (+15%)</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-slate-400 block mb-2">V-Shape Liquidity:</label>
+                  <label onClick={() => setVShapeLiq(!vShapeLiq)} className={`cursor-pointer p-4 rounded-xl border flex items-center gap-3 transition-all ${vShapeLiq ? 'bg-amber-500/20 border-amber-500' : 'bg-[#182032] border-slate-800'}`}>
+                    <input type="checkbox" checked={vShapeLiq} onChange={() => {}} className="accent-amber-500" />
+                    <div>
+                      <span className="font-bold block text-amber-200">נזילות בצורת V-Shape</span>
+                      <span className="text-[10px] text-slate-400 block mt-0.5">דחייה מהירה וחדה (+10%)</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {/* 04: MARKET SHIFT, TRAPS & MODEL SCREENSHOT */}
+            <div className="bg-[#121724] p-5 rounded-2xl border border-slate-800 space-y-4">
+              <h2 className="font-bold text-sm text-slate-200 border-b border-slate-800 pb-3 flex justify-between">
+                <span>04. שינוי מבנה (Shift) + צילום מודל כניסה</span>
+                <span className="text-xs text-purple-400 font-mono">משקל: עד 30%</span>
+              </h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div>
+                  <label className="text-slate-400 block mb-2">מרקט שיפט:</label>
+                  <div className="space-y-1.5">
+                    <button onClick={() => setShiftType('none')} className={`w-full p-2 rounded-lg border text-right ${shiftType === 'none' ? 'bg-slate-800 border-slate-600' : 'bg-[#182032] border-slate-800'}`}>ללא Shift (0%)</button>
+                    <button onClick={() => setShiftType('ms')} className={`w-full p-2 rounded-lg border text-right ${shiftType === 'ms' ? 'bg-purple-500/20 border-purple-500 text-purple-200' : 'bg-[#182032] border-slate-800'}`}>Market Shift תקני (+10%)</button>
+                    <button onClick={() => setShiftType('fractal')} className={`w-full p-2 rounded-lg border text-right ${shiftType === 'fractal' ? 'bg-purple-500/20 border-purple-500 text-purple-200' : 'bg-[#182032] border-slate-800'}`}>Fractal MS (+5%)</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-slate-400 block mb-2">מודל כניסה נבחר (+15%):</label>
+                  <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} className="w-full bg-[#182032] border border-slate-700 rounded-xl p-2.5 text-xs text-purple-200 font-semibold mb-3">
                     <option value="none">ללא מודל ספציפי (0%)</option>
                     <option value="model3">מודל 3 - Fake Market Shift (+15%)</option>
                     <option value="model4">מודל 4 - Equal Highs / Lows (+15%)</option>
                     <option value="model5">מודל 5 - Fake Flip (+15%)</option>
                   </select>
 
-                  <div className="mt-3">
-                    <label className="text-slate-400 block mb-1">מלכודות MS (+5% לכל מלכודת):</label>
-                    <div className="grid grid-cols-4 gap-1 bg-[#182032] p-1 rounded-xl border border-slate-700 text-center">
-                      {[0, 1, 2, 3].map((num) => (
-                        <button key={num} onClick={() => setTrapsCount(num)} className={`py-1.5 rounded-lg font-bold ${trapsCount === num ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>
-                          {num === 0 ? 'ללא' : `${num}`}
-                        </button>
-                      ))}
-                    </div>
+                  <label className="text-slate-400 block mb-1">מלכודות MS (+5% לכל מלכודת):</label>
+                  <div className="grid grid-cols-4 gap-1 bg-[#182032] p-1 rounded-xl border border-slate-700 text-center">
+                    {[0, 1, 2, 3].map((num) => (
+                      <button key={num} onClick={() => setTrapsCount(num)} className={`py-1.5 rounded-lg font-bold ${trapsCount === num ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>
+                        {num === 0 ? 'ללא' : `${num}`}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 {/* MODEL SCREENSHOT UPLOAD */}
                 <div>
-                  <label className="text-slate-400 block mb-1">צילום גרף מודל הכניסה (Model Chart):</label>
+                  <label className="text-slate-400 block mb-1">צילום מודל כניסה (Model Chart):</label>
                   <div className="relative aspect-video bg-[#0d1117] rounded-xl border border-dashed border-purple-500/40 flex items-center justify-center">
                     {images.model ? <img src={images.model} className="w-full h-full object-cover rounded-xl" /> : (
                       <div className="text-center p-2">
@@ -394,6 +439,7 @@ function App() {
                 </div>
               </div>
             </div>
+
           </div>
 
           {/* RIGHT SIDEBAR: SCORE & ACTION (4 COLS) */}
@@ -432,6 +478,15 @@ function App() {
             <div className="bg-[#121724] p-5 rounded-2xl border border-slate-800 space-y-3 text-xs">
               <h3 className="font-bold text-slate-200 border-b border-slate-800 pb-2">פרטי העסקה והזנה</h3>
 
+              <div>
+                <label className="text-slate-400 block mb-1">סטטוס העסקה</label>
+                <div className="grid grid-cols-3 gap-1 bg-[#182032] p-1 rounded-xl border border-slate-700 text-center font-bold">
+                  <button onClick={() => setTradeStatus('PENDING')} className={`py-1 rounded-lg ${tradeStatus === 'PENDING' ? 'bg-amber-500 text-slate-950' : 'text-slate-400'}`}>בתכנון</button>
+                  <button onClick={() => setTradeStatus('ACTIVE')} className={`py-1 rounded-lg ${tradeStatus === 'ACTIVE' ? 'bg-cyan-500 text-slate-950' : 'text-slate-400'}`}>פתוחה</button>
+                  <button onClick={() => setTradeStatus('CLOSED')} className={`py-1 rounded-lg ${tradeStatus === 'CLOSED' ? 'bg-emerald-500 text-slate-950' : 'text-slate-400'}`}>נסגרה</button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-slate-400 block mb-1">צמד מטבעות</label>
@@ -443,12 +498,11 @@ function App() {
                 <div>
                   <label className="text-slate-400 block mb-1">סשן מסחר</label>
                   <select value={session} onChange={(e) => setSession(e.target.value)} className="w-full bg-[#182032] border border-slate-700 rounded-xl p-2 text-white">
-                    <option value="London">London Session</option>
-
+                    <option value="London Session">London Session</option>
                     <option value="London Killzone">London Killzone</option>
-                    <option value="New York">New York Session</option>
+                    <option value="New York Session">New York Session</option>
                     <option value="NY Killzone">NY Killzone</option>
-                    <option value="Asia">Asia Session</option>
+                    <option value="Asia Session">Asia Session</option>
                   </select>
                 </div>
               </div>
@@ -467,10 +521,27 @@ function App() {
                 </div>
 
                 <div>
-                  <label className="text-slate-400 block mb-1">סיכון (1%)</label>
+                  <label className="text-slate-400 block mb-1">סיכון ($)</label>
                   <input type="number" value={riskAmount} onChange={(e) => setRiskAmount(e.target.value)} className="w-full bg-[#182032] border border-slate-700 rounded-xl p-2 text-white font-mono" />
                 </div>
               </div>
+
+              {tradeStatus === 'CLOSED' && (
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                  <div>
+                    <label className="text-slate-400 block mb-1">תוצאה</label>
+                    <select value={tradeResult} onChange={(e) => setTradeResult(e.target.value)} className="w-full bg-[#182032] border border-slate-700 rounded-xl p-2 text-white font-mono">
+                      <option value="WIN">WIN (רווח)</option>
+                      <option value="LOSS">LOSS (הפסד)</option>
+                      <option value="BE">BE (ללא שינוי)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-slate-400 block mb-1">PnL בפועל ($)</label>
+                    <input type="number" value={pnlAmount} onChange={(e) => setPnlAmount(e.target.value)} placeholder="327" className="w-full bg-[#182032] border border-slate-700 rounded-xl p-2 text-white font-mono" />
+                  </div>
+                </div>
+              )}
 
               {/* ENTRY SCREENSHOT */}
               <div>
@@ -501,6 +572,7 @@ function App() {
               <table className="w-full text-right text-xs font-mono">
                 <thead>
                   <tr className="bg-[#182032] text-slate-400 border-b border-slate-800">
+                    <th className="p-3">סטטוס</th>
                     <th className="p-3">תאריך</th>
                     <th className="p-3">צמד</th>
                     <th className="p-3">סשן</th>
@@ -514,6 +586,11 @@ function App() {
                 <tbody className="divide-y divide-slate-800/60">
                   {trades.map(t => (
                     <tr key={t.id}>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'CLOSED' ? (t.result === 'WIN' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400') : 'bg-cyan-500/20 text-cyan-300'}`}>
+                          {t.status === 'CLOSED' ? `סגורה (${t.result})` : t.status === 'ACTIVE' ? 'פתוחה' : 'בתכנון'}
+                        </span>
+                      </td>
                       <td className="p-3 text-slate-300">{t.date}</td>
                       <td className="p-3 font-bold text-white">{t.pair}</td>
                       <td className="p-3">{t.session}</td>
@@ -542,7 +619,7 @@ function App() {
             <div className="bg-[#121724] p-5 rounded-2xl border border-slate-800">
               <span className="text-xs text-slate-400 block mb-1">אחוז ניצחונות (Win Rate)</span>
               <span className={`text-3xl font-black font-mono ${analytics.winRate >= 50 ? 'text-emerald-400' : 'text-rose-400'}`}>{analytics.winRate}%</span>
-              <span className="text-[10px] text-slate-500 block mt-1">עסקאות: {analytics.total}</span>
+              <span className="text-[10px] text-slate-500 block mt-1">עסקאות סגורות: {analytics.total}</span>
             </div>
 
             <div className="bg-[#121724] p-5 rounded-2xl border border-slate-800">
